@@ -1,4 +1,4 @@
-# Expense Tracker Backend
+# SpentSmart - Expense Tracker Backend
 
 Production-ready REST API for expense tracking with authentication, analytics, file uploads, and email integration.
 
