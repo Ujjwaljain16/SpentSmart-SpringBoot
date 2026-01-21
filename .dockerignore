@@ -1,0 +1,6 @@
+# Ignore environment variables file
+.env
+
+# Docker volumes
+postgres_data/
+app_uploads/
