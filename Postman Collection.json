@@ -1,0 +1,406 @@
+{
+    "info": {
+        "_postman_id": "expense-tracker-backend",
+        "name": "Expense Tracker API",
+        "description": "Postman collection for the Expense Tracker Backend Term Project.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "pm.collectionVariables.set(\"token\", jsonData.token);",
+                                    "pm.collectionVariables.set(\"current_email\", jsonData.email);",
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"postman_user_{{$timestamp}}@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"Postman User\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "pm.collectionVariables.set(\"token\", jsonData.token);",
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{current_email}}\",\n    \"password\": \"Password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Categories",
+            "item": [
+                {
+                    "name": "Get All Categories",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.length > 0) {",
+                                    "    pm.collectionVariables.set(\"category_id\", jsonData[0].id);",
+                                    "}",
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Expenses",
+            "item": [
+                {
+                    "name": "Create Expense",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "pm.collectionVariables.set(\"expense_id\", jsonData.id);",
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"categoryId\": \"{{category_id}}\",\n    \"amount\": 150.50,\n    \"description\": \"Business Lunch\",\n    \"expenseDate\": \"2026-01-21\",\n    \"paymentMethod\": \"CARD\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/expenses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "expenses"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Expenses",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/expenses?page=0&size=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "expenses"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Expense By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/expenses/{{expense_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "expenses",
+                                "{{expense_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Expense",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"categoryId\": \"{{category_id}}\",\n    \"amount\": 200.00,\n    \"description\": \"Business Lunch (Updated)\",\n    \"expenseDate\": \"2026-01-21\",\n    \"paymentMethod\": \"CASH\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/expenses/{{expense_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "expenses",
+                                "{{expense_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Expense",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/expenses/{{expense_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "expenses",
+                                "{{expense_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Analytics",
+            "item": [
+                {
+                    "name": "Monthly Summary",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/analytics/monthly-summary?month=1&year=2026",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "analytics",
+                                "monthly-summary"
+                            ],
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "year",
+                                    "value": "2026"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Category Breakdown",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/analytics/category-breakdown?month=1&year=2026",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "analytics",
+                                "category-breakdown"
+                            ],
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "year",
+                                    "value": "2026"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Smart Insights",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/analytics/insights",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "analytics",
+                                "insights"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080/api",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "expense_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
