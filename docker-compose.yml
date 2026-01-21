@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: expense-tracker-db
+    environment:
+      POSTGRES_DB: expense_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-tracker-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expense-tracker-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/expense_tracker
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-docker
+      JWT_EXPIRATION: 86400000
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-your-email@gmail.com}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-your-app-password}
+      FILE_UPLOAD_DIR: /app/uploads
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app_uploads:/app/uploads
+    networks:
+      - expense-tracker-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  app_uploads:
+
+networks:
+  expense-tracker-network:
+    driver: bridge
