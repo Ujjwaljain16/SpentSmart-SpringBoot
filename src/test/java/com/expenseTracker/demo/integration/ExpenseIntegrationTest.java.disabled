@@ -1,0 +1,329 @@
+package com.expenseTracker.demo.integration;
+
+import com.expenseTracker.demo.dto.request.ExpenseRequest;
+import com.expenseTracker.demo.dto.request.RegisterRequest;
+import com.expenseTracker.demo.dto.response.AuthResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class ExpenseIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private String authToken;
+    private UUID categoryId;
+
+    @BeforeEach
+    void setup() throws Exception {
+        // Register and login to get token
+        RegisterRequest registerRequest = new RegisterRequest();
+        registerRequest.setEmail("expense-test-" + System.currentTimeMillis() + "@example.com");
+        registerRequest.setPassword("Password123");
+        registerRequest.setFullName("Expense Test User");
+
+        MvcResult result = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andReturn();
+
+        AuthResponse authResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(), AuthResponse.class);
+        authToken = authResponse.getToken();
+
+        // Get first category ID
+        MvcResult categoryResult = mockMvc.perform(get("/api/categories")
+                        .header("Authorization", "Bearer " + authToken))
+                .andReturn();
+
+        String categoryJson = categoryResult.getResponse().getContentAsString();
+        categoryId = UUID.fromString(objectMapper.readTree(categoryJson).get(0).get("id").asText());
+    }
+
+    @Test
+    void shouldCreateExpense() throws Exception {
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("150.50"));
+        request.setDescription("Test expense");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CARD");
+
+        mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.amount").value(150.50))
+                .andExpect(jsonPath("$.description").value("Test expense"))
+                .andExpect(jsonPath("$.paymentMethod").value("CARD"));
+    }
+
+    @Test
+    void shouldRejectExpenseWithNegativeAmount() throws Exception {
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("-50.00"));
+        request.setDescription("Negative expense");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CASH");
+
+        mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.amount").exists());
+    }
+
+    @Test
+    void shouldRejectExpenseWithInvalidCategory() throws Exception {
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(UUID.randomUUID()); // Non-existent category
+        request.setAmount(new BigDecimal("100.00"));
+        request.setDescription("Invalid category");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CARD");
+
+        mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldGetAllExpensesWithPagination() throws Exception {
+        // Create multiple expenses
+        for (int i = 0; i < 5; i++) {
+            ExpenseRequest request = new ExpenseRequest();
+            request.setCategoryId(categoryId);
+            request.setAmount(new BigDecimal("" + (i * 10 + 50)));
+            request.setDescription("Expense " + i);
+            request.setExpenseDate(LocalDate.now());
+            request.setPaymentMethod("CARD");
+
+            mockMvc.perform(post("/api/expenses")
+                    .header("Authorization", "Bearer " + authToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)));
+        }
+
+        // Get with pagination
+        mockMvc.perform(get("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .param("page", "0")
+                        .param("size", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(5))
+                .andExpect(jsonPath("$.totalPages").value(2));
+    }
+
+    @Test
+    void shouldFilterExpensesByCategory() throws Exception {
+        // Create expense
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("100.00"));
+        request.setDescription("Filtered expense");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CARD");
+
+        mockMvc.perform(post("/api/expenses")
+                .header("Authorization", "Bearer " + authToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+
+        // Filter by category
+        mockMvc.perform(get("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .param("categoryId", categoryId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].categoryId").value(categoryId.toString()));
+    }
+
+    @Test
+    void shouldGetExpenseById() throws Exception {
+        // Create expense
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("75.25"));
+        request.setDescription("Get by ID test");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CASH");
+
+        MvcResult createResult = mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+
+        String expenseId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        // Get by ID
+        mockMvc.perform(get("/api/expenses/" + expenseId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(expenseId))
+                .andExpect(jsonPath("$.amount").value(75.25));
+    }
+
+    @Test
+    void shouldUpdateExpense() throws Exception {
+        // Create expense
+        ExpenseRequest createRequest = new ExpenseRequest();
+        createRequest.setCategoryId(categoryId);
+        createRequest.setAmount(new BigDecimal("100.00"));
+        createRequest.setDescription("Original description");
+        createRequest.setExpenseDate(LocalDate.now());
+        createRequest.setPaymentMethod("CARD");
+
+        MvcResult createResult = mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andReturn();
+
+        String expenseId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        // Update expense
+        ExpenseRequest updateRequest = new ExpenseRequest();
+        updateRequest.setCategoryId(categoryId);
+        updateRequest.setAmount(new BigDecimal("200.00"));
+        updateRequest.setDescription("Updated description");
+        updateRequest.setExpenseDate(LocalDate.now());
+        updateRequest.setPaymentMethod("CASH");
+
+        mockMvc.perform(put("/api/expenses/" + expenseId)
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(200.00))
+                .andExpect(jsonPath("$.description").value("Updated description"))
+                .andExpect(jsonPath("$.paymentMethod").value("CASH"));
+    }
+
+    @Test
+    void shouldDeleteExpense() throws Exception {
+        // Create expense
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("50.00"));
+        request.setDescription("To be deleted");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CARD");
+
+        MvcResult createResult = mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+
+        String expenseId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        // Delete expense
+        mockMvc.perform(delete("/api/expenses/" + expenseId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNoContent());
+
+        // Verify it's deleted (soft delete)
+        mockMvc.perform(get("/api/expenses/" + expenseId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldRejectUnauthorizedAccess() throws Exception {
+        mockMvc.perform(get("/api/expenses"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldNotAllowAccessToOtherUsersExpenses() throws Exception {
+        // Create expense with first user
+        ExpenseRequest request = new ExpenseRequest();
+        request.setCategoryId(categoryId);
+        request.setAmount(new BigDecimal("100.00"));
+        request.setDescription("User 1 expense");
+        request.setExpenseDate(LocalDate.now());
+        request.setPaymentMethod("CARD");
+
+        MvcResult createResult = mockMvc.perform(post("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+
+        String expenseId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        // Register second user
+        RegisterRequest registerRequest2 = new RegisterRequest();
+        registerRequest2.setEmail("user2-" + System.currentTimeMillis() + "@example.com");
+        registerRequest2.setPassword("Password123");
+        registerRequest2.setFullName("User 2");
+
+        MvcResult user2Result = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest2)))
+                .andReturn();
+
+        AuthResponse user2Auth = objectMapper.readValue(
+                user2Result.getResponse().getContentAsString(), AuthResponse.class);
+
+        // Try to access first user's expense with second user's token
+        mockMvc.perform(get("/api/expenses/" + expenseId)
+                        .header("Authorization", "Bearer " + user2Auth.getToken()))
+                .andExpect(status().isNotFound()); // Returns 404 to prevent enumeration
+    }
+
+    @Test
+    void shouldSortExpensesByDate() throws Exception {
+        // Create expenses with different dates
+        for (int i = 0; i < 3; i++) {
+            ExpenseRequest request = new ExpenseRequest();
+            request.setCategoryId(categoryId);
+            request.setAmount(new BigDecimal("100.00"));
+            request.setDescription("Expense " + i);
+            request.setExpenseDate(LocalDate.now().minusDays(i));
+            request.setPaymentMethod("CARD");
+
+            mockMvc.perform(post("/api/expenses")
+                    .header("Authorization", "Bearer " + authToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)));
+        }
+
+        // Get sorted by date descending
+        mockMvc.perform(get("/api/expenses")
+                        .header("Authorization", "Bearer " + authToken)
+                        .param("sortBy", "expenseDate")
+                        .param("sortDirection", "DESC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].expenseDate").value(LocalDate.now().toString()));
+    }
+}
