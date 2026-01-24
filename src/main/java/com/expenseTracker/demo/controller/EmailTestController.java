@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/test/email")
 @RequiredArgsConstructor
-@Tag(name = "Test Endpoints", description = "Endpoints for verifying system functionality")
+@Tag(name = "Test Endpoints", description = "Debugging endpoints")
 public class EmailTestController {
 
     private final EmailService emailService;
@@ -24,7 +24,7 @@ public class EmailTestController {
     public ResponseEntity<String> sendTestEmail(@RequestBody EmailTestRequest request) {
         String to = request.getEmail();
         String subject = "Expense Tracker - Test Email";
-        String body = "Hello,\n\nThis is a test email from your local Expense Tracker instance.\n\nIf you are reading this, your SMTP configuration is working correctly!\n\nBest,\nExpense Tracker Team";
+        String body = "Hi,\n\nThis is a quick test from the Expense Tracker app.\n\nIf you got this, SMTP is working fine.\n\nCheers,\nExpense Tracker Team";
 
         emailService.sendEmail(to, subject, body);
 

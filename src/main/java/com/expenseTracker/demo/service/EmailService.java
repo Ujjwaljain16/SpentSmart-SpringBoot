@@ -38,12 +38,9 @@ public class EmailService {
             String subject = "Your Monthly Expense Report - " + now.getMonth() + " " + year;
             String body = buildEmailBody(user, summary, breakdown);
 
-            // SIMULATION MODE FOR DEMO:
-            // If the email is the default placeholder, don't try to connect to Gmail. Just log it.
+            // If the email is the default placeholder, skip sending
             if (fromEmail == null || fromEmail.contains("your-email") || fromEmail.isEmpty()) {
-                log.info("DEMO MODE: Simulating email send to {}. (Real SMTP not configured)", user.getEmail());
-                log.info("Email Content Preview: Subject='{}', Body Length={}", subject, body.length());
-                log.info("Monthly report sent to user: {}", user.getEmail()); // Keep this specific log for the verification check
+                log.warn("Skipping email: SMTP not configured correctly.");
                 return;
             }
 
