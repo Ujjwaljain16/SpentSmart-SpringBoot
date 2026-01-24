@@ -34,12 +34,7 @@ public class ExpenseController {
 
     @PostMapping
     @Operation(summary = "Create expense", description = "Create a new expense for the authenticated user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Expense created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Category not found")
-    })
+    @ApiResponse(responseCode = "201", description = "Expense created successfully")
     public ResponseEntity<ExpenseResponse> createExpense(@Valid @RequestBody ExpenseRequest request) {
         ExpenseResponse response = expenseService.createExpense(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -47,11 +42,7 @@ public class ExpenseController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get expense by ID", description = "Retrieve a specific expense by ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Expense retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Expense not found")
-    })
+    @ApiResponse(responseCode = "200", description = "Expense retrieved successfully")
     public ResponseEntity<ExpenseResponse> getExpenseById(@PathVariable UUID id) {
         ExpenseResponse response = expenseService.getExpenseById(id);
         return ResponseEntity.ok(response);
@@ -59,10 +50,7 @@ public class ExpenseController {
 
     @GetMapping
     @Operation(summary = "List expenses", description = "Get paginated list of expenses with optional filters")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Expenses retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
+    @ApiResponse(responseCode = "200", description = "Expenses retrieved successfully")
     public ResponseEntity<Page<ExpenseResponse>> getExpenses(
             @Parameter(description = "Category ID filter") @RequestParam(required = false) UUID categoryId,
             @Parameter(description = "Start date filter (yyyy-MM-dd)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -88,12 +76,7 @@ public class ExpenseController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update expense", description = "Update an existing expense")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Expense updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Expense or category not found")
-    })
+    @ApiResponse(responseCode = "200", description = "Expense updated successfully")
     public ResponseEntity<ExpenseResponse> updateExpense(
             @PathVariable UUID id,
             @Valid @RequestBody ExpenseRequest request) {
@@ -103,11 +86,7 @@ public class ExpenseController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete expense", description = "Soft delete an expense")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Expense deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Expense not found")
-    })
+    @ApiResponse(responseCode = "204", description = "Expense deleted successfully")
     public ResponseEntity<Void> deleteExpense(@PathVariable UUID id) {
         expenseService.deleteExpense(id);
         return ResponseEntity.noContent().build();
