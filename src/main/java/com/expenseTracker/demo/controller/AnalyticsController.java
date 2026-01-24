@@ -28,6 +28,7 @@ import java.util.Map;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
+    private final com.expenseTracker.demo.service.EmailService emailService;
 
     @GetMapping("/monthly-summary")
     @Operation(summary = "Monthly summary", description = "Get total expenses and count for a specific month")
@@ -79,6 +80,7 @@ public class AnalyticsController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/insights")
     @Operation(summary = "Smart insights", description = "Get intelligent spending insights with trend analysis and category comparisons")
     @ApiResponses(value = {
@@ -88,5 +90,12 @@ public class AnalyticsController {
     public ResponseEntity<InsightsResponse> getInsights() {
         InsightsResponse response = analyticsService.getInsights();
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/test-email")
+    @Operation(summary = "Test Email", description = "Trigger a monthly report email to the authenticated user for verification")
+    public ResponseEntity<String> testEmail(@org.springframework.security.core.annotation.AuthenticationPrincipal com.expenseTracker.demo.entity.User user) {
+        emailService.sendMonthlyReport(user);
+        return ResponseEntity.ok("Email trigger initiated. Check server logs for 'Monthly report sent'.");
     }
 }

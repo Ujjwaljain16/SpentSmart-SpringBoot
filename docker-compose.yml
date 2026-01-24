@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: expense_tracker
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -29,13 +29,13 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/expense_tracker
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
-      JWT_SECRET: your-256-bit-secret-key-change-this-in-production-docker
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: 86400000
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-your-email@gmail.com}
-      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-your-app-password}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
       FILE_UPLOAD_DIR: /app/uploads
     ports:
       - "8080:8080"

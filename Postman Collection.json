@@ -349,6 +349,29 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "5. Verify Email",
+            "item": [
+                {
+                    "name": "Trigger Test Email",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/analytics/test-email",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "analytics",
+                                "test-email"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {

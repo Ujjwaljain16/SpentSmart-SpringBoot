@@ -37,3 +37,7 @@ hs_err_pid*
 # Logs
 logs/
 *.log
+
+# Environment variables (Sensitive)
+.env
+application-secret.properties

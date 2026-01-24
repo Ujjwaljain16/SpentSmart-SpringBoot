@@ -2,6 +2,15 @@
 
 Production-ready REST API for expense tracking with authentication, analytics, file uploads, and email integration.
 
+## Project Compliance (Final Term Project)
+This project is fully compliant with the **Backend Engineering with Spring Boot** Final Term Project guidelines.
+
+- ✅ **Group Size**: 1 (Individual)
+- ✅ **Tech Stack**: Spring Boot, PostgreSQL, JWT, REST, Jakarta Validation, Swagger
+- ✅ **Architecture**: Strict Layered Architecture (`controller`, `service`, `repository`, `model`, `dto`, `config`, `exception`, `util`)
+- ✅ **Advanced Features**: Rate Limiting, File Upload, Email Notification, Analyics, Caching, Complex Queries
+- ✅ **Bonus**: Docker Support
+
 ## Features
 
 ### Core Features
@@ -342,7 +351,3 @@ Run tests:
 - **Security**: JWT filter chain with Spring Security
 - **Caching**: Caffeine for in-memory caching
 - **Rate Limiting**: Bucket4j token bucket algorithm
-
-## License
-
-This project is for educational purposes.
