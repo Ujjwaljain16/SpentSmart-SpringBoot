@@ -5,7 +5,7 @@ Production-ready REST API for expense tracking with authentication, analytics, f
 ## Project Compliance (Final Term Project)
 This project is fully compliant with the **Backend Engineering with Spring Boot** Final Term Project guidelines.
 
-- ✅ **Group Size**: 1 (Individual)
+- ✅ **Group Size**: 6
 - ✅ **Tech Stack**: Spring Boot, PostgreSQL, JWT, REST, Jakarta Validation, Swagger
 - ✅ **Architecture**: Strict Layered Architecture (`controller`, `service`, `repository`, `model`, `dto`, `config`, `exception`, `util`)
 - ✅ **Advanced Features**: Rate Limiting, File Upload, Email Notification, Analyics, Caching, Complex Queries
